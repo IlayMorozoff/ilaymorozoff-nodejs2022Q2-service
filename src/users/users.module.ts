@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
-import { UsersRepository } from './users.repository';
+import { InMemoryDbModule } from 'src/in-memory-db/in-memory-db.module';
 
 @Module({
   controllers: [UsersController],
-  providers: [UsersService, UsersRepository],
+  providers: [UsersService],
+  imports: [InMemoryDbModule],
 })
 export class UsersModule {}
