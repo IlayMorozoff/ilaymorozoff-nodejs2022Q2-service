@@ -58,6 +58,7 @@ export class AlbumsService {
         albumId: null,
       });
     }
+    this.inMemoryDbService.favorites.removeAlbumFromFavorites(id);
   }
 
   private checkExistingAlbum(id: string): AlbumEntity {

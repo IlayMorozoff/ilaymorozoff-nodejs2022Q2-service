@@ -48,6 +48,7 @@ export class TracksService {
   async remove(id: string): Promise<void> {
     this.checkExistingTrack(id);
     this.inMemoryDbService.track.remove(id);
+    this.inMemoryDbService.favorites.removeTrackFromFavorites(id);
   }
 
   private checkExistingTrack(id: string): TrackEntity {

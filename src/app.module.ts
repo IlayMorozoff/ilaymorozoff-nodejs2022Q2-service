@@ -7,6 +7,7 @@ import { TracksModule } from './tracks/tracks.module';
 import { ArtistsModule } from './artists/artists.module';
 import { AlbumsModule } from './albums/albums.module';
 import { InMemoryDbModule } from './in-memory-db/in-memory-db.module';
+import { FavoritesModule } from './favorites/favorites.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { InMemoryDbModule } from './in-memory-db/in-memory-db.module';
     ArtistsModule,
     AlbumsModule,
     InMemoryDbModule,
+    FavoritesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

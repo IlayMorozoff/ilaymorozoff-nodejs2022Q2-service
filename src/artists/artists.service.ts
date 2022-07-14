@@ -67,6 +67,8 @@ export class ArtistsService {
         artistId: null,
       });
     }
+
+    this.inMemoryDbService.favorites.removeArtistFromFavorites(id);
   }
 
   private checkExistingArtist(id: string) {
