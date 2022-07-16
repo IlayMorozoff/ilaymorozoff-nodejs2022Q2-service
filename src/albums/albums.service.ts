@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
@@ -11,6 +15,16 @@ export class AlbumsService {
   constructor(private readonly inMemoryDbService: InMemoryDbService) {}
 
   async create(createAlbumDto: CreateAlbumDto): Promise<AlbumEntity> {
+    if (createAlbumDto.artistId) {
+      const artist = this.inMemoryDbService.artist.findOne(
+        createAlbumDto.artistId,
+      );
+      if (!artist) {
+        throw new UnprocessableEntityException(
+          `Artist with id ${createAlbumDto.artistId} does not exist`,
+        );
+      }
+    }
     const newAlbum = new AlbumEntity();
 
     newAlbum.id = uuidv4();

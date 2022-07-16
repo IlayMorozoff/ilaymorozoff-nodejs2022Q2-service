@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { InMemoryDbService } from 'src/in-memory-db/in-memory-db.service';
 import { CreateTrackDto } from './dto/create-track.dto';
@@ -11,6 +15,9 @@ export class TracksService {
   constructor(private readonly inMemoryDbService: InMemoryDbService) {}
 
   async create(createTrackDto: CreateTrackDto): Promise<TrackEntity> {
+    this.checkExistingDependentEntity(createTrackDto.artistId, 'artist');
+    this.checkExistingDependentEntity(createTrackDto.albumId, 'album');
+
     const newTrack = new TrackEntity();
 
     newTrack.id = uuidv4();
@@ -58,5 +65,16 @@ export class TracksService {
       throw new NotFoundException(ErrorMessages.TRACK_NOT_FOUND);
     }
     return track;
+  }
+
+  private checkExistingDependentEntity(id: string, entity: string): void {
+    if (id) {
+      const entityInDb = this.inMemoryDbService[`${entity}`].findOne(id);
+      if (!entityInDb) {
+        throw new UnprocessableEntityException(
+          `${entity} with id ${id} does not exist`,
+        );
+      }
+    }
   }
 }
