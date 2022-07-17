@@ -62,14 +62,16 @@ export class AlbumsService {
     this.checkExistingAlbum(id);
     this.inMemoryDbService.album.remove(id);
 
-    const track = this.inMemoryDbService.track
+    const tracks = this.inMemoryDbService.track
       .findAll()
-      .find((item) => item.albumId === id);
+      .filter((item) => item.albumId === id);
 
-    if (track) {
-      this.inMemoryDbService.track.update(track.id, {
-        ...track,
-        albumId: null,
+    if (tracks.length !== 0) {
+      tracks.forEach((track) => {
+        this.inMemoryDbService.track.update(track.id, {
+          ...track,
+          albumId: null,
+        });
       });
     }
     this.inMemoryDbService.favorites.removeAlbumFromFavorites(id);

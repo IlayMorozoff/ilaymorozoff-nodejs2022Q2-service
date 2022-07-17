@@ -46,25 +46,29 @@ export class ArtistsService {
   async remove(id: string): Promise<void> {
     this.checkExistingArtist(id);
     this.inMemoryDbService.artist.remove(id);
-    const album = this.inMemoryDbService.album
+    const albums = this.inMemoryDbService.album
       .findAll()
-      .find((item) => item.artistId === id);
+      .filter((item) => item.artistId === id);
 
-    if (album) {
-      this.inMemoryDbService.album.update(album.id, {
-        ...album,
-        artistId: null,
+    if (albums.length !== 0) {
+      albums.forEach((album) => {
+        this.inMemoryDbService.album.update(album.id, {
+          ...album,
+          artistId: null,
+        });
       });
     }
 
-    const track = this.inMemoryDbService.track
+    const tracks = this.inMemoryDbService.track
       .findAll()
-      .find((item) => item.artistId === id);
+      .filter((item) => item.artistId === id);
 
-    if (track) {
-      this.inMemoryDbService.track.update(track.id, {
-        ...track,
-        artistId: null,
+    if (tracks.length !== 0) {
+      tracks.forEach((track) => {
+        this.inMemoryDbService.track.update(track.id, {
+          ...track,
+          artistId: null,
+        });
       });
     }
 
