@@ -4,7 +4,7 @@ import { TrackEntity } from 'src/tracks/entities/track.entity';
 import { FavoritesEntity } from '../favorites/entities/favorite.entity';
 
 export class FavoritesRepository {
-  private favorites: FavoritesEntity = {
+  favorites: FavoritesEntity = {
     artists: [],
     tracks: [],
     albums: [],
@@ -15,35 +15,35 @@ export class FavoritesRepository {
   }
 
   addArtistToFavorites(artist: ArtistEntity): ArtistEntity {
-    this.favorites.artists.push(artist);
+    this.favorites.artists.push(artist.id);
     return artist;
   }
 
   removeArtistFromFavorites(id: string): void {
     this.favorites.artists = this.favorites.artists.filter(
-      (item) => item.id !== id,
+      (itemId) => itemId !== id,
     );
   }
 
   addAlbumToFavorites(album: AlbumEntity): AlbumEntity {
-    this.favorites.albums.push(album);
+    this.favorites.albums.push(album.id);
     return album;
   }
 
   removeAlbumFromFavorites(id: string): void {
     this.favorites.albums = this.favorites.albums.filter(
-      (item) => item.id !== id,
+      (itemId) => itemId !== id,
     );
   }
 
   addTrackToFavorites(track: TrackEntity): TrackEntity {
-    this.favorites.tracks.push(track);
+    this.favorites.tracks.push(track.id);
     return track;
   }
 
   removeTrackFromFavorites(id: string): void {
     this.favorites.tracks = this.favorites.tracks.filter(
-      (item) => item.id !== id,
+      (itemId) => itemId !== id,
     );
   }
 }

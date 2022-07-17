@@ -12,4 +12,21 @@ export class InMemoryDbService {
   public album = new AlbumsRepository();
   public track = new TracksRepository();
   public favorites = new FavoritesRepository();
+
+  async findAllFavorites() {
+    const artists = this.favorites.favorites.artists.map((id) =>
+      this.artist.findOne(id),
+    );
+    const albums = this.favorites.favorites.albums.map((id) =>
+      this.album.findOne(id),
+    );
+    const tracks = this.favorites.favorites.tracks.map((id) =>
+      this.track.findOne(id),
+    );
+    return {
+      artists,
+      albums,
+      tracks,
+    };
+  }
 }

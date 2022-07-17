@@ -11,7 +11,7 @@ export class FavoritesService {
   constructor(private readonly inMemoryDbService: InMemoryDbService) {}
 
   findAll() {
-    return this.inMemoryDbService.favorites.findAll();
+    return this.inMemoryDbService.findAllFavorites();
   }
 
   addArtistToFavorites(id: string) {
