@@ -1,0 +1,44 @@
+version: '3.4'
+
+services:
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      MIGRATIONS_TABLE_NAME: "${MIGRATIONS_TABLE_NAME}"
+      DB_TYPE: "${DB_TYPE}"
+      DB_PORT: "${DB_PORT}"
+      DB_USERNAME: "${DB_USERNAME}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_NAME: "${DB_NAME}"
+      DB_HOST: postgres
+      PORT: "${PORT}"
+    links:
+      - postgres
+    ports:
+      - "${PORT}:${PORT}"
+    restart: always
+    depends_on:
+      - postgres
+
+  postgres:
+    container_name: postgres
+    build:
+      context: .
+      dockerfile: ./db/Dockerfile
+    environment:
+      POSTGRES_USER: "${DB_USERNAME}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_DB: "${DB_NAME}"
+      POSTGRES_HOST: "${DB_HOST}"
+    volumes:
+      - app:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    restart: always
+
+volumes:
+  postgres:
+  app:
