@@ -3,8 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorMessages } from 'src/common/errorsMgs';
 import { InMemoryDbService } from 'src/in-memory-db/in-memory-db.service';
+import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
@@ -12,23 +14,31 @@ import { UserEntity } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly inMemoryDbService: InMemoryDbService) {}
+  constructor(
+    private readonly inMemoryDbService: InMemoryDbService,
+    @InjectRepository(UserEntity)
+    private readonly usersRepository: Repository<UserEntity>,
+  ) { }
 
   async create(createUserDto: CreateUserDto): Promise<UserEntity> {
     const newUser = new UserEntity();
 
-    newUser.id = uuidv4();
-    newUser.password = createUserDto.password;
-    newUser.login = createUserDto.login;
-    newUser.createdAt = Date.now();
-    newUser.updatedAt = Date.now();
-    newUser.version = 1;
+    Object.assign(newUser, createUserDto);
+    // this.usersRepository.create(newUser);
 
-    return this.inMemoryDbService.user.create(newUser);
+    // newUser.id = uuidv4();
+    // newUser.password = createUserDto.password;
+    // newUser.login = createUserDto.login;
+    // newUser.createdAt = Date.now();
+    // newUser.updatedAt = Date.now();
+    // newUser.version = 1;
+
+    return this.usersRepository.create(newUser);
   }
 
   async findAll(): Promise<UserEntity[]> {
-    return this.inMemoryDbService.user.findAll();
+    return this.usersRepository.find();
+    // return this.inMemoryDbService.user.findAll();
   }
 
   async findOne(id: string): Promise<UserEntity> {
