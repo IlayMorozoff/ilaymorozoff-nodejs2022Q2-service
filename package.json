@@ -18,7 +18,12 @@
     "test:auth": "cross-env TEST_MODE=auth jest --config ./test/jest-e2e.json",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "docker:build": "docker compose up -d --build",
+    "docker:start": "docker compose start",
+    "docker:stop": "docker compose stop",
+    "docker:scan:app": "docker scan ilaymorozoff-nodejs2022q2-service_app",
+    "docker:scan:db": "docker scan ilaymorozoff-nodejs2022q2-service_postgres"
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",
@@ -41,7 +46,8 @@
     "rxjs": "^7.2.0",
     "swagger-ui-express": "^4.4.0",
     "typeorm": "^0.3.7",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "yaml": "^2.1.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.0",
