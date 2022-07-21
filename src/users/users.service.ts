@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorMessages } from 'src/common/errorsMgs';
-import { InMemoryDbService } from 'src/in-memory-db/in-memory-db.service';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
@@ -14,18 +13,14 @@ import { UserEntity } from './entities/user.entity';
 @Injectable()
 export class UsersService {
   constructor(
-    private readonly inMemoryDbService: InMemoryDbService,
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserEntity> {
     const newUser = new UserEntity();
-
     Object.assign(newUser, createUserDto);
-
     const createdUser = this.usersRepository.create(newUser);
-
     return this.usersRepository.save(createdUser);
   }
 
@@ -40,7 +35,10 @@ export class UsersService {
     });
   }
 
-  async update(id: string, updatePasswordDto: UpdatePasswordDto) {
+  async update(
+    id: string,
+    updatePasswordDto: UpdatePasswordDto,
+  ): Promise<UserEntity> {
     const user = await this.checkExistsingUser(id);
 
     if (user.password !== updatePasswordDto.oldPassword) {
