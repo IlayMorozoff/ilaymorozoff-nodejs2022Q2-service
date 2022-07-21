@@ -34,7 +34,6 @@ services:
       POSTGRES_USER: "${DB_USERNAME}"
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
       POSTGRES_DB: "${DB_NAME}"
-      POSTGRES_HOST: "${DB_HOST}"
       PG_DATA: /var/lib/postgresql/data
     networks:
       - rest-serivce

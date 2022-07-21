@@ -1,4 +1,4 @@
-import { Exclude } from 'class-transformer';
+import { Exclude, Transform } from 'class-transformer';
 import {
   Column,
   CreateDateColumn,
@@ -26,8 +26,10 @@ export class UserEntity {
   version: number; // integer number, increments on update
 
   @CreateDateColumn()
+  @Transform(({ value }) => value.getTime())
   createdAt: number; // timestamp of creation
 
   @UpdateDateColumn()
+  @Transform(({ value }) => value.getTime())
   updatedAt: number; // timestamp of last update
 }
