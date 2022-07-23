@@ -19,7 +19,7 @@ services:
       - rest-serivce
     ports:
       - "${PORT}:${PORT}"
-    restart: always
+    restart: unless-stopped
     depends_on:
       - postgres
     volumes:
@@ -41,7 +41,7 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "${DB_PORT}:${DB_PORT}"
-    restart: always
+    restart: unless-stopped
 
 networks:
   rest-serivce:

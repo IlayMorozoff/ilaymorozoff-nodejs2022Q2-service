@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
 import { TrackEntity } from './entities/track.entity';
@@ -7,12 +11,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AlbumsService } from 'src/albums/albums.service';
 import { ArtistsService } from 'src/artists/artists.service';
+import { FavoritesEntity } from 'src/favorites/entities/favorite.entity';
 
 @Injectable()
 export class TracksService {
   constructor(
     @InjectRepository(TrackEntity)
     private readonly tracksRepository: Repository<TrackEntity>,
+    @InjectRepository(FavoritesEntity)
+    private readonly favoritesRepository: Repository<FavoritesEntity>,
     private readonly albumsService: AlbumsService,
     private readonly artistsService: ArtistsService,
   ) {}
@@ -53,6 +60,17 @@ export class TracksService {
   async remove(id: string): Promise<void> {
     const track = await this.checkExistingTrack(id);
     await this.tracksRepository.remove(track);
+
+    const favs = await this.favoritesRepository.find();
+
+    if (favs.length && favs[0] && favs[0].tracks.includes(id)) {
+      favs[0] = {
+        ...favs[0],
+        tracks: favs[0].tracks.filter((item) => item !== id),
+      };
+
+      await this.favoritesRepository.save(favs);
+    }
   }
 
   private async checkExistingTrack(id: string): Promise<TrackEntity> {
@@ -62,5 +80,18 @@ export class TracksService {
       throw new NotFoundException(ErrorMessages.TRACK_NOT_FOUND);
     }
     return track;
+  }
+
+  async checkExistingDependencyTrack(id: string): Promise<TrackEntity> {
+    if (id) {
+      const entityInDb = await this.tracksRepository.findOneBy({ id });
+      if (!entityInDb) {
+        throw new UnprocessableEntityException(
+          `Track with id ${id} does not exist`,
+        );
+      }
+
+      return entityInDb;
+    }
   }
 }

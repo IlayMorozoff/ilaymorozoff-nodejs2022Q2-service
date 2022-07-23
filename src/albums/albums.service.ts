@@ -10,12 +10,15 @@ import { AlbumEntity } from './entities/album.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ArtistsService } from 'src/artists/artists.service';
+import { FavoritesEntity } from 'src/favorites/entities/favorite.entity';
 
 @Injectable()
 export class AlbumsService {
   constructor(
     @InjectRepository(AlbumEntity)
     private readonly albumsRepository: Repository<AlbumEntity>,
+    @InjectRepository(FavoritesEntity)
+    private readonly favoritesRepository: Repository<FavoritesEntity>,
     private readonly artistsService: ArtistsService,
   ) {}
 
@@ -50,6 +53,17 @@ export class AlbumsService {
   async remove(id: string): Promise<void> {
     const album = await this.checkExistingAlbum(id);
     await this.albumsRepository.remove(album);
+
+    const favs = await this.favoritesRepository.find();
+
+    if (favs.length && favs[0] && favs[0].albums.includes(id)) {
+      favs[0] = {
+        ...favs[0],
+        albums: favs[0].albums.filter((item) => item !== id),
+      };
+
+      await this.favoritesRepository.save(favs);
+    }
   }
 
   private async checkExistingAlbum(id: string): Promise<AlbumEntity> {
@@ -61,7 +75,7 @@ export class AlbumsService {
     return album;
   }
 
-  async checkExistingDependencyAlbum(id: string): Promise<void> {
+  async checkExistingDependencyAlbum(id: string): Promise<AlbumEntity> {
     if (id) {
       const entityInDb = await this.albumsRepository.findOneBy({ id });
       if (!entityInDb) {
@@ -69,6 +83,7 @@ export class AlbumsService {
           `Album with id ${id} does not exist`,
         );
       }
+      return entityInDb;
     }
   }
 }

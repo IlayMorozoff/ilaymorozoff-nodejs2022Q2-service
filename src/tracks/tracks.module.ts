@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TrackEntity } from './entities/track.entity';
 import { AlbumsModule } from 'src/albums/albums.module';
 import { ArtistsModule } from 'src/artists/artists.module';
+import { FavoritesEntity } from 'src/favorites/entities/favorite.entity';
 
 @Module({
   controllers: [TracksController],
@@ -12,7 +13,8 @@ import { ArtistsModule } from 'src/artists/artists.module';
   imports: [
     AlbumsModule,
     ArtistsModule,
-    TypeOrmModule.forFeature([TrackEntity]),
+    TypeOrmModule.forFeature([TrackEntity, FavoritesEntity]),
   ],
+  exports: [TracksService],
 })
 export class TracksModule {}

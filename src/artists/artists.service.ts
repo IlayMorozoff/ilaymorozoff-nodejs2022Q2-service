@@ -9,12 +9,15 @@ import { UpdateArtistDto } from './dto/update-artist.dto';
 import { ArtistEntity } from './entities/artist.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { FavoritesEntity } from 'src/favorites/entities/favorite.entity';
 
 @Injectable()
 export class ArtistsService {
   constructor(
     @InjectRepository(ArtistEntity)
     private readonly artistsRepository: Repository<ArtistEntity>,
+    @InjectRepository(FavoritesEntity)
+    private readonly favoritesRepository: Repository<FavoritesEntity>,
   ) {}
 
   async create(createArtistDto: CreateArtistDto): Promise<ArtistEntity> {
@@ -45,9 +48,20 @@ export class ArtistsService {
   async remove(id: string): Promise<void> {
     const artist = await this.checkExistingArtist(id);
     await this.artistsRepository.remove(artist);
+
+    const favs = await this.favoritesRepository.find();
+
+    if (favs.length && favs[0] && favs[0].artists.includes(id)) {
+      favs[0] = {
+        ...favs[0],
+        artists: favs[0].artists.filter((item) => item !== id),
+      };
+
+      await this.favoritesRepository.save(favs);
+    }
   }
 
-  private async checkExistingArtist(id: string): Promise<ArtistEntity> {
+  async checkExistingArtist(id: string): Promise<ArtistEntity> {
     const artist = await this.artistsRepository.findOneBy({ id });
 
     if (!artist) {
@@ -57,7 +71,7 @@ export class ArtistsService {
     return artist;
   }
 
-  async checkExistingDependencyArtist(id: string): Promise<void> {
+  async checkExistingDependencyArtist(id: string): Promise<ArtistEntity> {
     if (id) {
       const entityInDb = await this.artistsRepository.findOneBy({ id });
       if (!entityInDb) {
@@ -65,6 +79,7 @@ export class ArtistsService {
           `Artist with id ${id} does not exist`,
         );
       }
+      return entityInDb;
     }
   }
 }

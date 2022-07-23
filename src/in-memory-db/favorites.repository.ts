@@ -1,10 +1,9 @@
 import { AlbumEntity } from 'src/albums/entities/album.entity';
 import { ArtistEntity } from 'src/artists/entities/artist.entity';
 import { TrackEntity } from 'src/tracks/entities/track.entity';
-import { FavoritesEntity } from '../favorites/entities/favorite.entity';
 
 export class FavoritesRepository {
-  favorites: FavoritesEntity = {
+  favorites: any = {
     artists: [],
     tracks: [],
     albums: [],
