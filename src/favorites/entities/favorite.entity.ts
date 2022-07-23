@@ -1,5 +1,8 @@
 import { Exclude } from 'class-transformer';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { AlbumEntity } from 'src/albums/entities/album.entity';
+import { ArtistEntity } from 'src/artists/entities/artist.entity';
+import { TrackEntity } from 'src/tracks/entities/track.entity';
+import { Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({
   name: 'favorites',
@@ -9,12 +12,12 @@ export class FavoritesEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', array: true, default: [] })
-  artists: string[] = [];
+  @OneToMany(() => ArtistEntity, (artist) => artist.favorites)
+  artists: ArtistEntity[];
 
-  @Column({ type: 'varchar', array: true, default: [] })
-  albums: string[] = [];
+  @OneToMany(() => AlbumEntity, (album) => album.favorites)
+  albums: AlbumEntity[];
 
-  @Column({ type: 'varchar', array: true, default: [] })
-  tracks: string[] = [];
+  @OneToMany(() => TrackEntity, (track) => track.favorites)
+  tracks: TrackEntity[];
 }

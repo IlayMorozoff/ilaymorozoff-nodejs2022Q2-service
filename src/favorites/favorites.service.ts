@@ -17,32 +17,15 @@ export class FavoritesService {
     private readonly tracksService: TracksService,
   ) {}
 
-  async buildResponseFavorites(favorites: FavoritesEntity) {
-    return {
-      artists:
-        (await Promise.all(
-          favorites?.artists?.map((id) => this.artistsService.findOne(id)),
-        )) || [],
-      albums:
-        (await Promise.all(
-          favorites?.albums?.map(
-            async (id) => await this.albumsService.findOne(id),
-          ),
-        )) || [],
-      tracks:
-        (await Promise.all(
-          favorites?.tracks?.map(
-            async (id) => await this.tracksService.findOne(id),
-          ),
-        )) || [],
-    };
-  }
-
   async findAll(): Promise<FavoritesEntity> {
-    const favorites = await this.favoritesRepository.find();
-    return favorites.length && favorites[0]
-      ? favorites[0]
-      : new FavoritesEntity();
+    const [favorites] = await this.favoritesRepository.find({
+      relations: {
+        artists: true,
+        albums: true,
+        tracks: true,
+      },
+    });
+    return favorites;
   }
 
   async addArtistToFavorites(id: string) {
@@ -50,7 +33,7 @@ export class FavoritesService {
     const favs = await this.findAll();
     this.alreadeExistsError(favs, id);
 
-    favs.artists.push(id);
+    favs.artists.push(artist);
     await this.favoritesRepository.save(favs);
     return artist;
   }
@@ -59,8 +42,8 @@ export class FavoritesService {
     const artist = await this.artistsService.checkExistingArtist(id);
     const favs = await this.findAll();
 
-    if (favs.artists.includes(id)) {
-      favs.artists = favs.artists.filter((item) => item !== id);
+    if (favs.artists.map((item) => item.id).includes(id)) {
+      favs.artists = favs.artists.filter((item) => item.id !== id);
     }
     await this.favoritesRepository.save(favs);
     return artist;
@@ -69,7 +52,7 @@ export class FavoritesService {
   async addAlbumToFavorites(id: string) {
     const album = await this.albumsService.checkExistingDependencyAlbum(id);
     const favs = await this.findAll();
-    favs.albums.push(id);
+    favs.albums.push(album);
 
     await this.favoritesRepository.save(favs);
     return album;
@@ -79,8 +62,8 @@ export class FavoritesService {
     const album = await this.albumsService.checkExistingDependencyAlbum(id);
     const favs = await this.findAll();
 
-    if (favs.albums.includes(id)) {
-      favs.albums = favs.albums.filter((item) => item !== id);
+    if (favs.albums.map((item) => item.id).includes(id)) {
+      favs.albums = favs.albums.filter((item) => item.id !== id);
     }
 
     await this.favoritesRepository.save(favs);
@@ -90,7 +73,7 @@ export class FavoritesService {
   async addTrackToFavorites(id: string) {
     const track = await this.tracksService.checkExistingDependencyTrack(id);
     const favs = await this.findAll();
-    favs.tracks.push(id);
+    favs.tracks.push(track);
 
     await this.favoritesRepository.save(favs);
     return track;
@@ -100,8 +83,8 @@ export class FavoritesService {
     const track = await this.tracksService.checkExistingDependencyTrack(id);
     const favs = await this.findAll();
 
-    if (favs.tracks.includes(id)) {
-      favs.tracks = favs.tracks.filter((item) => item !== id);
+    if (favs.tracks.map((item) => item.id).includes(id)) {
+      favs.tracks = favs.tracks.filter((item) => item.id !== id);
     }
 
     await this.favoritesRepository.save(favs);
@@ -109,7 +92,7 @@ export class FavoritesService {
   }
 
   alreadeExistsError(favs: FavoritesEntity, id: string) {
-    if (favs.artists.includes(id)) {
+    if (favs.artists.map((item) => item.id).includes(id)) {
       throw new BadRequestException(
         ErrorMessages.EntityWithCurrentIdAlreadyAddedIntoFavorites,
       );

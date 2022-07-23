@@ -54,16 +54,14 @@ export class AlbumsService {
     const album = await this.checkExistingAlbum(id);
     await this.albumsRepository.remove(album);
 
-    const favs = await this.favoritesRepository.find();
+    const [favs] = await this.favoritesRepository.find({
+      relations: {
+        albums: true,
+      },
+    });
 
-    if (favs.length && favs[0] && favs[0].albums.includes(id)) {
-      favs[0] = {
-        ...favs[0],
-        albums: favs[0].albums.filter((item) => item !== id),
-      };
-
-      await this.favoritesRepository.save(favs);
-    }
+    favs.albums.filter((item) => item.id !== id);
+    await this.favoritesRepository.save(favs);
   }
 
   private async checkExistingAlbum(id: string): Promise<AlbumEntity> {

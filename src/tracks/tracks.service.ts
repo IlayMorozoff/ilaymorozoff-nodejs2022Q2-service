@@ -61,16 +61,14 @@ export class TracksService {
     const track = await this.checkExistingTrack(id);
     await this.tracksRepository.remove(track);
 
-    const favs = await this.favoritesRepository.find();
+    const [favs] = await this.favoritesRepository.find({
+      relations: {
+        tracks: true,
+      },
+    });
 
-    if (favs.length && favs[0] && favs[0].tracks.includes(id)) {
-      favs[0] = {
-        ...favs[0],
-        tracks: favs[0].tracks.filter((item) => item !== id),
-      };
-
-      await this.favoritesRepository.save(favs);
-    }
+    favs.tracks.filter((item) => item.id !== id);
+    await this.favoritesRepository.save(favs);
   }
 
   private async checkExistingTrack(id: string): Promise<TrackEntity> {

@@ -1,4 +1,5 @@
 import { ArtistEntity } from 'src/artists/entities/artist.entity';
+import { FavoritesEntity } from 'src/favorites/entities/favorite.entity';
 import { TrackEntity } from 'src/tracks/entities/track.entity';
 import {
   Column,
@@ -33,4 +34,9 @@ export class AlbumEntity {
     onDelete: 'SET NULL',
   })
   track: TrackEntity[]; // refers to Artist
+
+  @ManyToOne(() => FavoritesEntity, (favorite) => favorite.tracks, {
+    onDelete: 'CASCADE',
+  })
+  favorites: FavoritesEntity;
 }

@@ -20,7 +20,7 @@ export class FavoritesController {
   @UseInterceptors(ClassSerializerInterceptor)
   async findAllАFavorites() {
     const favorites = await this.favoritesService.findAll();
-    return await this.favoritesService.buildResponseFavorites(favorites);
+    return favorites;
   }
 
   @Post('artist/:id')

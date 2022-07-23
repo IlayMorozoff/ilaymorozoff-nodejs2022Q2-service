@@ -49,16 +49,14 @@ export class ArtistsService {
     const artist = await this.checkExistingArtist(id);
     await this.artistsRepository.remove(artist);
 
-    const favs = await this.favoritesRepository.find();
+    const [favs] = await this.favoritesRepository.find({
+      relations: {
+        artists: true,
+      },
+    });
 
-    if (favs.length && favs[0] && favs[0].artists.includes(id)) {
-      favs[0] = {
-        ...favs[0],
-        artists: favs[0].artists.filter((item) => item !== id),
-      };
-
-      await this.favoritesRepository.save(favs);
-    }
+    favs.artists.filter((item) => item.id !== id);
+    await this.favoritesRepository.save(favs);
   }
 
   async checkExistingArtist(id: string): Promise<ArtistEntity> {
