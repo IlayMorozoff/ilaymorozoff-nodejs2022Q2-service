@@ -211,3 +211,14 @@ Service should listen on PORT 4000 by default, PORT value is stored in .env file
 Incoming requests should be validated.
 
 You can fix and use OpenAPI file in doc folder.
+
+## in order to run this application, you must follow the following instructions
+
+1. Clone this repository (``git clone {url this repository}``) or pull postgres images and applications from dockerhub (with ``docker pull morozoff1994/ilaymorozoff-nodejs2022q2-service_postgres`` and ``docker pull morozoff1994/ilaymorozoff-nodejs2022q2-service_app`` commands)
+
+2. If you have cloned the repository from github, then you need to run the build of docker images with the command `docker:build`
+
+3. if suddenly, by some chance, the database is not initialized by entities from the application, it is recommended to go inside the application with the command ``docker exec -it {docker container id}`` (you can get the docker container id with the ``docker ps -a`` command), thereby you will get into an interactive terminal, and you can run migrations with the ``npm run migration command:run`` and in this case the database is initialized by entities from the application
+
+4. You can run a script to search for npm vulnerabilities in the images of this project with the command `docker:scan:app`, `docker:scan:db`
+
