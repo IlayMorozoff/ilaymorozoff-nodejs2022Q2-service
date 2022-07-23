@@ -15,7 +15,9 @@ export class FavoritesService {
     private readonly albumsService: AlbumsService,
     private readonly artistsService: ArtistsService,
     private readonly tracksService: TracksService,
-  ) {}
+  ) {
+    this.findAll();
+  }
 
   async findAll(): Promise<FavoritesEntity> {
     const [favorites] = await this.favoritesRepository.find({
@@ -25,6 +27,9 @@ export class FavoritesService {
         tracks: true,
       },
     });
+    if (!favorites) {
+      this.favoritesRepository.save({});
+    }
     return favorites;
   }
 
