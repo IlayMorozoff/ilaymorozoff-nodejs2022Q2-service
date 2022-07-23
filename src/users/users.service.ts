@@ -52,7 +52,7 @@ export class UsersService {
 
   async remove(id: string): Promise<void> {
     const user = await this.checkExistsingUser(id);
-    this.usersRepository.remove(user);
+    await this.usersRepository.remove(user);
   }
 
   private async checkExistsingUser(id: string): Promise<UserEntity> {

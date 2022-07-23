@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { ErrorMessages } from 'src/common/errorsMgs';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
@@ -34,18 +38,13 @@ export class ArtistsService {
     updateArtistDto: UpdateArtistDto,
   ): Promise<ArtistEntity> {
     const artist = await this.checkExistingArtist(id);
-
-    const newArtist = {
-      ...artist,
-      ...updateArtistDto,
-    };
-
-    return this.artistsRepository.save(newArtist);
+    Object.assign(artist, updateArtistDto);
+    return this.artistsRepository.save(artist);
   }
 
   async remove(id: string): Promise<void> {
     const artist = await this.checkExistingArtist(id);
-    this.artistsRepository.remove(artist);
+    await this.artistsRepository.remove(artist);
   }
 
   private async checkExistingArtist(id: string): Promise<ArtistEntity> {
@@ -56,5 +55,16 @@ export class ArtistsService {
     }
 
     return artist;
+  }
+
+  async checkExistingDependencyArtist(id: string): Promise<void> {
+    if (id) {
+      const entityInDb = await this.artistsRepository.findOneBy({ id });
+      if (!entityInDb) {
+        throw new UnprocessableEntityException(
+          `Artist with id ${id} does not exist`,
+        );
+      }
+    }
   }
 }

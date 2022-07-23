@@ -1,80 +1,66 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
-import { InMemoryDbService } from 'src/in-memory-db/in-memory-db.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
 import { TrackEntity } from './entities/track.entity';
 import { ErrorMessages } from 'src/common/errorsMgs';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { AlbumsService } from 'src/albums/albums.service';
+import { ArtistsService } from 'src/artists/artists.service';
 
 @Injectable()
 export class TracksService {
-  constructor(private readonly inMemoryDbService: InMemoryDbService) {}
+  constructor(
+    @InjectRepository(TrackEntity)
+    private readonly tracksRepository: Repository<TrackEntity>,
+    private readonly albumsService: AlbumsService,
+    private readonly artistsService: ArtistsService,
+  ) {}
 
   async create(createTrackDto: CreateTrackDto): Promise<TrackEntity> {
-    this.checkExistingDependentEntity(createTrackDto.artistId, 'artist');
-    this.checkExistingDependentEntity(createTrackDto.albumId, 'album');
+    await this.artistsService.checkExistingDependencyArtist(
+      createTrackDto.artistId,
+    );
+    await this.albumsService.checkExistingDependencyAlbum(
+      createTrackDto.albumId,
+    );
 
     const newTrack = new TrackEntity();
-
-    newTrack.id = uuidv4();
-    newTrack.albumId = createTrackDto.albumId || null;
-    newTrack.artistId = createTrackDto.artistId || null;
-    newTrack.duration = createTrackDto.duration;
-    newTrack.name = createTrackDto.name;
-
-    return this.inMemoryDbService.track.create(newTrack);
+    Object.assign(newTrack, createTrackDto);
+    const createdTrack = this.tracksRepository.create(newTrack);
+    return this.tracksRepository.save(createdTrack);
   }
 
   async findAll(): Promise<TrackEntity[]> {
-    return this.inMemoryDbService.track.findAll();
+    return this.tracksRepository.find();
   }
 
   async findOne(id: string): Promise<TrackEntity> {
-    this.checkExistingTrack(id);
-    return this.inMemoryDbService.track.findOne(id);
+    await this.checkExistingTrack(id);
+    return this.tracksRepository.findOneBy({ id });
   }
 
   async update(
     id: string,
     updateTrackDto: UpdateTrackDto,
   ): Promise<TrackEntity> {
-    const track = this.checkExistingTrack(id);
-
-    const newTrack = {
-      ...track,
-      ...updateTrackDto,
-    };
-
-    return this.inMemoryDbService.track.update(id, newTrack);
+    const track = await this.checkExistingTrack(id);
+    Object.assign(track, updateTrackDto);
+    const createdTrack = this.tracksRepository.create(track);
+    return this.tracksRepository.save(createdTrack);
   }
 
   async remove(id: string): Promise<void> {
-    this.checkExistingTrack(id);
-    this.inMemoryDbService.track.remove(id);
-    this.inMemoryDbService.favorites.removeTrackFromFavorites(id);
+    const track = await this.checkExistingTrack(id);
+    await this.tracksRepository.remove(track);
   }
 
-  private checkExistingTrack(id: string): TrackEntity {
-    const track = this.inMemoryDbService.track.findOne(id);
+  private async checkExistingTrack(id: string): Promise<TrackEntity> {
+    const track = await this.tracksRepository.findOneBy({ id });
 
     if (!track) {
       throw new NotFoundException(ErrorMessages.TRACK_NOT_FOUND);
     }
     return track;
-  }
-
-  private checkExistingDependentEntity(id: string, entity: string): void {
-    if (id) {
-      const entityInDb = this.inMemoryDbService[`${entity}`].findOne(id);
-      if (!entityInDb) {
-        throw new UnprocessableEntityException(
-          `${entity} with id ${id} does not exist`,
-        );
-      }
-    }
   }
 }
