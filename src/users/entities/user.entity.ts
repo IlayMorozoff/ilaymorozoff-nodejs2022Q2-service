@@ -1,5 +1,6 @@
 import { Exclude, Transform } from 'class-transformer';
 import {
+  BeforeInsert,
   Column,
   CreateDateColumn,
   Entity,
@@ -7,6 +8,10 @@ import {
   UpdateDateColumn,
   VersionColumn,
 } from 'typeorm';
+import { hash } from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
+
+const config = new ConfigService();
 
 @Entity({
   name: 'users',
@@ -32,4 +37,18 @@ export class UserEntity {
   @UpdateDateColumn()
   @Transform(({ value }) => value.getTime())
   updatedAt: number; // timestamp of last update
+
+  @BeforeInsert()
+  async hashPassword() {
+    this.password = await hash(
+      this.password,
+      +config.get<number>('JWT_SALT_PASSWORD'),
+    );
+  }
+
+  @Column({ nullable: true })
+  @Exclude()
+  refreshToken: string;
+
+  accessToken: string;
 }
