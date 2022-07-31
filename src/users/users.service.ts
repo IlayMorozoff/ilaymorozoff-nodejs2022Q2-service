@@ -1,15 +1,11 @@
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { compare } from 'bcrypt';
-import { sign } from 'jsonwebtoken';
-import { CreateAuthDto } from 'src/auth/dto/create-auth.dto';
+import { compare, hash } from 'bcrypt';
 import { ErrorMessages } from 'src/common/errorsMgs';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -53,11 +49,21 @@ export class UsersService {
   ): Promise<UserEntity> {
     const user = await this.checkExistsingUser(id);
 
-    if (user.password !== updatePasswordDto.oldPassword) {
+    const isPasswordCorrect = await compare(
+      updatePasswordDto.oldPassword,
+      user.password,
+    );
+
+    console.log(isPasswordCorrect);
+
+    if (!isPasswordCorrect) {
       throw new ForbiddenException(ErrorMessages.OLD_PASSWORD_IS_NOT_VALID);
     }
 
-    user.password = updatePasswordDto.newPassword;
+    user.password = await hash(
+      updatePasswordDto.newPassword,
+      +this.config.get<string>('JWT_SALT_PASSWORD'),
+    );
 
     return this.usersRepository.save(user);
   }
@@ -77,46 +83,5 @@ export class UsersService {
     }
 
     return user;
-  }
-
-  async login(loginUserDto: CreateAuthDto) {
-    const user = await this.usersRepository.findOneBy({
-      login: loginUserDto.login,
-    });
-
-    if (!user) {
-      throw new ForbiddenException('Credentials are not valid');
-    }
-
-    const isPasswordCorrect = await compare(
-      loginUserDto.password,
-      user.password,
-    );
-
-    if (!isPasswordCorrect) {
-      throw new ForbiddenException('Credentials are not valid');
-    }
-
-    user.refreshToken = await this.generateJwt(
-      user,
-      SECRETS.JWT_SECRET_REFRESH,
-    );
-
-    user.accessToken = await this.generateJwt(user, SECRETS.JWT_SECRET_ACCESS);
-
-    return this.usersRepository.save(user);
-  }
-
-  async generateJwt(user: UserEntity, config: SECRETS): Promise<string> {
-    return sign(
-      {
-        id: user.id,
-        login: user.login,
-      },
-      this.config.get<string>(config),
-      {
-        expiresIn: config === SECRETS.JWT_SECRET_ACCESS ? '15m' : '30d',
-      },
-    );
   }
 }

@@ -27,9 +27,6 @@ export class AuthMiddleware implements NestMiddleware {
         token,
         this.config.get<string>('JWT_SECRET_ACCESS'),
       ) as UserEntity;
-
-      console.log(decode, 'decode');
-
       const user = await this.userService.findOne(decode.id);
       req.user = user;
       next();

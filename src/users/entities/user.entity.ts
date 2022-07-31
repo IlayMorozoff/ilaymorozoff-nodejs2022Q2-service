@@ -46,7 +46,7 @@ export class UserEntity {
     );
   }
 
-  @Column({ nullable: true })
+  @Column({ default: '' })
   @Exclude()
   refreshToken: string;
 

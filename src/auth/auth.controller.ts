@@ -8,6 +8,7 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { RefreshToken } from './decorators/refreshToken.decorator';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 
@@ -17,19 +18,21 @@ export class AuthController {
 
   @Post('signup')
   @UseInterceptors(ClassSerializerInterceptor)
-  register(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.signup(createAuthDto);
+  async register(@Body() createAuthDto: CreateAuthDto) {
+    return await this.authService.signup(createAuthDto);
   }
 
   @Post('login')
+  @UseInterceptors(ClassSerializerInterceptor)
   @HttpCode(HttpStatus.OK)
-  login(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.login(createAuthDto);
+  async login(@Body() createAuthDto: CreateAuthDto) {
+    return await this.authService.login(createAuthDto);
   }
 
   @Post('refresh')
+  @HttpCode(HttpStatus.OK)
   @UseInterceptors(ClassSerializerInterceptor)
-  refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
-    return this.authService.refresh(refreshTokenDto);
+  async refreshToken(@RefreshToken() refreshTokenDto: RefreshTokenDto) {
+    return await this.authService.refresh(refreshTokenDto);
   }
 }
