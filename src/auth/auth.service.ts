@@ -42,10 +42,10 @@ export class AuthService {
 
   async verifyRefreshToken(refreshToken: string): Promise<UserEntity | null> {
     try {
-      const decode = verify(
+      const decode = (await verify(
         refreshToken,
         this.config.get<string>('JWT_SECRET_REFRESH'),
-      ) as UserEntity;
+      )) as UserEntity;
 
       const user = await this.usersRepository.findOneBy({
         id: decode.id,
@@ -94,14 +94,17 @@ export class AuthService {
   }
 
   async generateJwt(user: UserEntity, config: SECRETS): Promise<string> {
-    return sign(
+    return await sign(
       {
-        id: user.id,
+        userId: user.id,
         login: user.login,
       },
       this.config.get<string>(config),
       {
-        expiresIn: config === SECRETS.JWT_SECRET_ACCESS ? '15m' : '30d',
+        expiresIn:
+          config === SECRETS.JWT_SECRET_ACCESS
+            ? this.config.get<string>('TOKEN_EXPIRE_TIME')
+            : this.config.get<string>('TOKEN_REFRESH_EXPIRE_TIME'),
       },
     );
   }

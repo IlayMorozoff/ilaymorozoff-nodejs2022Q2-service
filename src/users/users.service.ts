@@ -54,8 +54,6 @@ export class UsersService {
       user.password,
     );
 
-    console.log(isPasswordCorrect);
-
     if (!isPasswordCorrect) {
       throw new ForbiddenException(ErrorMessages.OLD_PASSWORD_IS_NOT_VALID);
     }
