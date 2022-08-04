@@ -10,6 +10,10 @@ import { FavoritesModule } from './favorites/favorites.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './auth/middlewares/auth.middleware';
+import { APP_FILTER } from '@nestjs/core';
+import { AllExceptionsFilter } from './utils/all-exeptions.filter';
+import { CustomLoggerModule } from './custom-logger/custom-logger.module';
+import { LoggerMiddleware } from './custom-logger/custom-logger.middleware';
 
 @Module({
   imports: [
@@ -40,9 +44,16 @@ import { AuthMiddleware } from './auth/middlewares/auth.middleware';
     AlbumsModule,
     FavoritesModule,
     AuthModule,
+    CustomLoggerModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+  ],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
@@ -69,6 +80,8 @@ export class AppModule {
       .forRoutes({
         path: '*',
         method: RequestMethod.ALL,
-      });
+      })
+      .apply(LoggerMiddleware)
+      .forRoutes('*');
   }
 }
