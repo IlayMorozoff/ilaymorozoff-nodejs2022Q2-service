@@ -4,10 +4,13 @@ import * as fs from 'fs';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class CustomLoggerService extends ConsoleLogger {
-  fileName = '';
-  constructor(private readonly config: ConfigService) {
+  private fileName = '';
+  private fileSize = this.config.get<number>('MAX_SIZE_FILE_LOG');
+
+  constructor(private config: ConfigService) {
     super();
     const environment = this.config.get('NODE_ENV');
+
     const logLevels: LogLevel[] =
       environment === 'production'
         ? ['log', 'warn', 'error']
@@ -37,27 +40,24 @@ export class CustomLoggerService extends ConsoleLogger {
   verbose(message: string, context?: string) {
     super.verbose.apply(this, [`\n${message}`, context]);
   }
+
   private writeLogToFile = (
     message: string,
     type: string,
     context?: string,
   ): void => {
     const amended = `\n${type.toUpperCase()} ${
-      context
-        ? '[' + context + ']'
-        : this.context
-        ? '[' + this.context + ']'
-        : ''
+      context ? `[${context}]` : this.context ? `[${this.context}]` : ''
     } ${message}`;
 
     if (!this.fileName) {
-      this.createFileAndSave(amended, this.context);
+      this.createFile(amended, this.context);
     } else {
       this.amendFile(amended, this.context);
     }
   };
 
-  createFileAndSave(message: string, context: string) {
+  createFile(message: string, context: string) {
     if (context) {
       this.fileName = `${
         context === 'LoggerMiddleware' ? 'logs' : 'errors'
@@ -75,9 +75,7 @@ export class CustomLoggerService extends ConsoleLogger {
         super.log.apply(this, [message, context]);
       } else {
         const fileSize = stat.size;
-        // console.log(fileSize, 'FILE SIZE', this.config.get<string>('MAX_SIZE_FILE_LOG'))
-
-        if (fileSize > 2000) {
+        if (fileSize > this.fileSize) {
           this.fileName = `${
             context === 'LoggerMiddleware' ? 'logs' : 'errors'
           }_${context}_${Date.now()}.log`;
