@@ -58,6 +58,8 @@ import { LoggerMiddleware } from './custom-logger/custom-logger.middleware';
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
+      .apply(LoggerMiddleware)
+      .forRoutes('*')
       .apply(AuthMiddleware)
       .exclude(
         {
@@ -80,8 +82,6 @@ export class AppModule {
       .forRoutes({
         path: '*',
         method: RequestMethod.ALL,
-      })
-      .apply(LoggerMiddleware)
-      .forRoutes('*');
+      });
   }
 }

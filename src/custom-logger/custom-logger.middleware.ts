@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { Response, NextFunction } from 'express';
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { HttpStatus, Injectable, NestMiddleware } from '@nestjs/common';
 import { CustomLoggerService } from './custom-logger.service';
 import { ExpressRequestInterface } from 'src/common/types';
 
@@ -17,21 +17,20 @@ export class LoggerMiddleware implements NestMiddleware {
     response: Response,
     next: NextFunction,
   ): void {
-    const { method, body, params, originalUrl } = request;
-    let statusCode = 200;
-    if (request.user || ('login' in body && 'password' in body)) {
-      if (method === 'POST') statusCode = 201;
-      if (method === 'DELETE') statusCode = 204;
-    } else {
-      statusCode = 401;
-    }
+    const { method, body, params, query, originalUrl, ip } = request;
 
-    const log = `\nResponse Code: ${statusCode} - Method: ${method} - URL: ${originalUrl}
-    Body - ${JSON.stringify(body)}
-    Params: ${JSON.stringify(params)}
-    `;
-    this.customLoggerService.log(log, LoggerMiddleware.name);
+    response.on('finish', () => {
+      const { statusCode } = response;
 
+      if (statusCode < HttpStatus.BAD_REQUEST) {
+        const log = `\nResponse Code: ${statusCode} - Method: ${method} - URL: ${originalUrl} - IP: ${ip}
+        Body - ${JSON.stringify(body)}
+        Params: ${JSON.stringify(params)}
+        Query params: ${JSON.stringify(query)}
+        `;
+        this.customLoggerService.log(log, LoggerMiddleware.name);
+      }
+    });
     next();
   }
 }

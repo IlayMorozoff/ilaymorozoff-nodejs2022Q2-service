@@ -59,7 +59,9 @@ export class CustomLoggerService extends ConsoleLogger {
 
   createFileAndSave(message: string, context: string) {
     if (context) {
-      this.fileName = `error_${context}_${Date.now()}.log`;
+      this.fileName = `${
+        context === 'LoggerMiddleware' ? 'logs' : 'errors'
+      }_${context}_${Date.now()}.log`;
       fs.appendFile(this.fileName, `${message}`, 'utf8', (err) => {
         if (err) throw err;
       });
@@ -73,10 +75,14 @@ export class CustomLoggerService extends ConsoleLogger {
         super.log.apply(this, [message, context]);
       } else {
         const fileSize = stat.size;
+        // console.log(fileSize, 'FILE SIZE', this.config.get<string>('MAX_SIZE_FILE_LOG'))
 
-        if (fileSize > +this.config.get<string>('MAX_SIZE_FILE_LOG')) {
-          this.fileName = `error_${context}_${Date.now()}.log`;
+        if (fileSize > 2000) {
+          this.fileName = `${
+            context === 'LoggerMiddleware' ? 'logs' : 'errors'
+          }_${context}_${Date.now()}.log`;
         }
+
         fs.appendFile(this.fileName, `${message}`, 'utf8', (err) => {
           if (err) throw err;
         });
