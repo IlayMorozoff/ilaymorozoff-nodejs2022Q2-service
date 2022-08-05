@@ -6,13 +6,15 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
-import * as fs from 'fs';
 import { ExpressRequestInterface } from 'src/common/types';
+import { CustomLoggerService } from 'src/custom-logger/custom-logger.service';
 import { CustomHttpExeptionResponse } from './all-exeptions.interface';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  // constructor() {}
+  constructor(private readonly customLoggerService: CustomLoggerService) {
+    this.customLoggerService.setContext(AllExceptionsFilter.name);
+  }
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -32,7 +34,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     const errorResponse = this.getErrorResponse(status, message, request);
     const errorLog = this.getErrorLog(errorResponse, request, exception);
-    this.writeErrorLogToFile(errorLog);
+    this.customLoggerService.error(errorLog, AllExceptionsFilter.name);
     response.status(status).json(errorResponse);
   }
 
@@ -63,11 +65,5 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof HttpException ? exception.stack : message
     }\n\n`;
     return errorLog;
-  };
-
-  private writeErrorLogToFile = (errorLog: string): void => {
-    fs.appendFile('error.log', errorLog, 'utf8', (err) => {
-      if (err) throw err;
-    });
   };
 }

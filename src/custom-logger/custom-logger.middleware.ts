@@ -19,7 +19,7 @@ export class LoggerMiddleware implements NestMiddleware {
   ): void {
     const { method, body, params, originalUrl } = request;
     let statusCode = 200;
-    if (request.user) {
+    if (request.user || ('login' in body && 'password' in body)) {
       if (method === 'POST') statusCode = 201;
       if (method === 'DELETE') statusCode = 204;
     } else {

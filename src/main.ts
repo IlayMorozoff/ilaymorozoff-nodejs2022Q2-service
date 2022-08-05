@@ -6,6 +6,7 @@ import { parse } from 'yaml';
 import { readFile } from 'fs/promises';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
+import { CustomLoggerService } from './custom-logger/custom-logger.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
