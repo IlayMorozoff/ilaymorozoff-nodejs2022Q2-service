@@ -3,18 +3,26 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+import { compare, hash } from 'bcrypt';
 import { ErrorMessages } from 'src/common/errorsMgs';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UserEntity } from './entities/user.entity';
 
+export const enum SECRETS {
+  JWT_SECRET_ACCESS = 'JWT_SECRET_ACCESS',
+  JWT_SECRET_REFRESH = 'JWT_SECRET_REFRESH',
+}
+
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly usersRepository: Repository<UserEntity>,
+    private readonly config: ConfigService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserEntity> {
@@ -41,11 +49,19 @@ export class UsersService {
   ): Promise<UserEntity> {
     const user = await this.checkExistsingUser(id);
 
-    if (user.password !== updatePasswordDto.oldPassword) {
+    const isPasswordCorrect = await compare(
+      updatePasswordDto.oldPassword,
+      user.password,
+    );
+
+    if (!isPasswordCorrect) {
       throw new ForbiddenException(ErrorMessages.OLD_PASSWORD_IS_NOT_VALID);
     }
 
-    user.password = updatePasswordDto.newPassword;
+    user.password = await hash(
+      updatePasswordDto.newPassword,
+      +this.config.get<string>('JWT_SALT_PASSWORD'),
+    );
 
     return this.usersRepository.save(user);
   }

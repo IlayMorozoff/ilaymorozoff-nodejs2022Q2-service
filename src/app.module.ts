@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -8,6 +8,8 @@ import { ArtistsModule } from './artists/artists.module';
 import { AlbumsModule } from './albums/albums.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
+import { AuthMiddleware } from './auth/middlewares/auth.middleware';
 
 @Module({
   imports: [
@@ -37,8 +39,36 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     ArtistsModule,
     AlbumsModule,
     FavoritesModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuthMiddleware)
+      .exclude(
+        {
+          path: '/auth/signup',
+          method: RequestMethod.ALL,
+        },
+        {
+          path: '/auth/login',
+          method: RequestMethod.ALL,
+        },
+        {
+          path: '/doc',
+          method: RequestMethod.ALL,
+        },
+        {
+          path: '/',
+          method: RequestMethod.ALL,
+        },
+      )
+      .forRoutes({
+        path: '*',
+        method: RequestMethod.ALL,
+      });
+  }
+}
