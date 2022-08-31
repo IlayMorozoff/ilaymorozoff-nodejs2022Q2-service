@@ -7,6 +7,8 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { FavoritesService } from './favorites.service';
 
@@ -15,11 +17,14 @@ export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 
   @Get()
-  findAllАFavorites() {
-    return this.favoritesService.findAll();
+  @UseInterceptors(ClassSerializerInterceptor)
+  async findAllАFavorites() {
+    const favorites = await this.favoritesService.findAll();
+    return favorites;
   }
 
   @Post('artist/:id')
+  @UseInterceptors(ClassSerializerInterceptor)
   addArtistsToFavorites(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
   ) {
@@ -27,6 +32,7 @@ export class FavoritesController {
   }
 
   @Delete('artist/:id')
+  @UseInterceptors(ClassSerializerInterceptor)
   @HttpCode(HttpStatus.NO_CONTENT)
   removeArtistsFromFavorites(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
@@ -35,6 +41,7 @@ export class FavoritesController {
   }
 
   @Post('album/:id')
+  @UseInterceptors(ClassSerializerInterceptor)
   addAlbumToFavorites(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
   ) {
@@ -42,6 +49,7 @@ export class FavoritesController {
   }
 
   @Delete('album/:id')
+  @UseInterceptors(ClassSerializerInterceptor)
   @HttpCode(HttpStatus.NO_CONTENT)
   removeAlbumFromFavorites(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
@@ -50,6 +58,7 @@ export class FavoritesController {
   }
 
   @Post('track/:id')
+  @UseInterceptors(ClassSerializerInterceptor)
   addTrackToFavorites(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
   ) {
@@ -57,6 +66,7 @@ export class FavoritesController {
   }
 
   @Delete('track/:id')
+  @UseInterceptors(ClassSerializerInterceptor)
   @HttpCode(HttpStatus.NO_CONTENT)
   removeTrackFromFavorites(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,

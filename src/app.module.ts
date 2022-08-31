@@ -6,7 +6,6 @@ import { UsersModule } from './users/users.module';
 import { TracksModule } from './tracks/tracks.module';
 import { ArtistsModule } from './artists/artists.module';
 import { AlbumsModule } from './albums/albums.module';
-import { InMemoryDbModule } from './in-memory-db/in-memory-db.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -29,6 +28,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
           synchronize: false,
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           migrations: [__dirname + '/migrations/**/*{.ts,.js}'],
+          migrationsRun: true,
         };
       },
     }),
@@ -36,7 +36,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     TracksModule,
     ArtistsModule,
     AlbumsModule,
-    InMemoryDbModule,
     FavoritesModule,
   ],
   controllers: [AppController],

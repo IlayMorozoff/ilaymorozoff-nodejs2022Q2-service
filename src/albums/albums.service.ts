@@ -3,86 +3,85 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
 import { ErrorMessages } from 'src/common/errorsMgs';
 import { AlbumEntity } from './entities/album.entity';
-import { InMemoryDbService } from 'src/in-memory-db/in-memory-db.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ArtistsService } from 'src/artists/artists.service';
+import { FavoritesEntity } from 'src/favorites/entities/favorite.entity';
 
 @Injectable()
 export class AlbumsService {
-  constructor(private readonly inMemoryDbService: InMemoryDbService) {}
+  constructor(
+    @InjectRepository(AlbumEntity)
+    private readonly albumsRepository: Repository<AlbumEntity>,
+    @InjectRepository(FavoritesEntity)
+    private readonly favoritesRepository: Repository<FavoritesEntity>,
+    private readonly artistsService: ArtistsService,
+  ) {}
 
   async create(createAlbumDto: CreateAlbumDto): Promise<AlbumEntity> {
-    if (createAlbumDto.artistId) {
-      const artist = this.inMemoryDbService.artist.findOne(
-        createAlbumDto.artistId,
-      );
-      if (!artist) {
-        throw new UnprocessableEntityException(
-          `Artist with id ${createAlbumDto.artistId} does not exist`,
-        );
-      }
-    }
+    await this.artistsService.checkExistingDependencyArtist(
+      createAlbumDto.artistId,
+    );
     const newAlbum = new AlbumEntity();
-
-    newAlbum.id = uuidv4();
-    newAlbum.artistId = createAlbumDto.artistId || null;
-    newAlbum.name = createAlbumDto.name;
-    newAlbum.year = createAlbumDto.year;
-
-    return this.inMemoryDbService.album.create(newAlbum);
+    Object.assign(newAlbum, createAlbumDto);
+    const createdAlbum = this.albumsRepository.create(newAlbum);
+    return this.albumsRepository.save(createdAlbum);
   }
 
   async findAll(): Promise<AlbumEntity[]> {
-    return this.inMemoryDbService.album.findAll();
+    return this.albumsRepository.find();
   }
 
   async findOne(id: string): Promise<AlbumEntity> {
-    this.checkExistingAlbum(id);
-    return this.inMemoryDbService.album.findOne(id);
+    await this.checkExistingAlbum(id);
+    return this.albumsRepository.findOneBy({ id });
   }
 
   async update(
     id: string,
     updateAlbumDto: UpdateAlbumDto,
   ): Promise<AlbumEntity> {
-    const album = this.checkExistingAlbum(id);
-
-    const newAlbum = {
-      ...album,
-      ...updateAlbumDto,
-    };
-
-    return this.inMemoryDbService.album.update(id, newAlbum);
+    const album = await this.checkExistingAlbum(id);
+    Object.assign(album, updateAlbumDto);
+    return this.albumsRepository.save(album);
   }
 
   async remove(id: string): Promise<void> {
-    this.checkExistingAlbum(id);
-    this.inMemoryDbService.album.remove(id);
+    const album = await this.checkExistingAlbum(id);
+    await this.albumsRepository.remove(album);
 
-    const tracks = this.inMemoryDbService.track
-      .findAll()
-      .filter((item) => item.albumId === id);
+    const [favs] = await this.favoritesRepository.find({
+      relations: {
+        albums: true,
+      },
+    });
 
-    if (tracks.length !== 0) {
-      tracks.forEach((track) => {
-        this.inMemoryDbService.track.update(track.id, {
-          ...track,
-          albumId: null,
-        });
-      });
-    }
-    this.inMemoryDbService.favorites.removeAlbumFromFavorites(id);
+    favs.albums.filter((item) => item.id !== id);
+    await this.favoritesRepository.save(favs);
   }
 
-  private checkExistingAlbum(id: string): AlbumEntity {
-    const album = this.inMemoryDbService.album.findOne(id);
+  private async checkExistingAlbum(id: string): Promise<AlbumEntity> {
+    const album = await this.albumsRepository.findOneBy({ id });
 
     if (!album) {
       throw new NotFoundException(ErrorMessages.ALBUM_NOT_FOUND);
     }
     return album;
+  }
+
+  async checkExistingDependencyAlbum(id: string): Promise<AlbumEntity> {
+    if (id) {
+      const entityInDb = await this.albumsRepository.findOneBy({ id });
+      if (!entityInDb) {
+        throw new UnprocessableEntityException(
+          `Album with id ${id} does not exist`,
+        );
+      }
+      return entityInDb;
+    }
   }
 }
