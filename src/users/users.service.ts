@@ -62,7 +62,6 @@ export class UsersService {
       updatePasswordDto.newPassword,
       +this.config.get<string>('JWT_SALT_PASSWORD'),
     );
-
     return this.usersRepository.save(user);
   }
 
