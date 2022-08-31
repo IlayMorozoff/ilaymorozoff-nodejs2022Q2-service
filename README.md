@@ -214,6 +214,7 @@ You can fix and use OpenAPI file in doc folder.
 
 # in order to run this application, you must follow the following instructions
 
+
 1. Clone this repository (``git clone {url this repository}``) or pull postgres images and applications from dockerhub (with ``docker pull morozoff1994/ilaymorozoff-nodejs2022q2-service_postgres`` and ``docker pull morozoff1994/ilaymorozoff-nodejs2022q2-service_app`` commands)
 
 2. If you have cloned the repository from github, then you need to run the build of docker images with the command `docker:build`
